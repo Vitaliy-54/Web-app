@@ -1,8 +1,8 @@
-import './App.css';
+import { useState, useEffect } from "react";
 import EmployeeAPI from "./api/service";
 import Table from "./Table";
 import AddStudentForm from "./AddStudentForm";
-import { useState, useEffect } from "react";
+import { Container, Typography } from "@mui/material";
 
 function App() {
   const [employees, setEmployees] = useState([]);
@@ -48,11 +48,13 @@ function App() {
   };
 
   return (
-    <div className="App">
-      <p>Студенты</p>
+    <Container>
+      <Typography variant="h4" align="center" gutterBottom>
+        Студенты
+      </Typography>
       <AddStudentForm addStudent={addEmp} />
       <Table employees={employees} delEmployee={delEmp} />
-    </div>
+    </Container>
   );
 }
 

@@ -1,33 +1,37 @@
 import React from "react";
-import './Table.css';
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button } from "@mui/material";
 
-const Table = ({ employees, delEmployee }) => {
+const EmployeeTable = ({ employees, delEmployee }) => {
   return (
-    <table className="employee-table">
-      <thead>
-        <tr>
-        <th>ID</th>
-          <th>Имя</th>
-          <th>Фамилия</th>
-          <th>Группа</th>
-          <th>Удаление</th>
-        </tr>
-      </thead>
-      <tbody>
-        {employees.map((employee) => (
-          <tr key={employee.id}>
-              <td>{employee.id}</td>
-            <td>{employee.name}</td>
-            <td>{employee.surname}</td>
-            <td>{employee.group}</td>
-            <td>
-              <button onClick={() => delEmployee(employee.id)}>Удалить</button>
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <TableContainer component={Paper}>
+      <Table>
+        <TableHead>
+          <TableRow>
+            <TableCell>ID</TableCell>
+            <TableCell>Имя</TableCell>
+            <TableCell>Фамилия</TableCell>
+            <TableCell>Группа</TableCell>
+            <TableCell>Удаление</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {employees.map((employee) => (
+            <TableRow key={employee.id}>
+              <TableCell>{employee.id}</TableCell>
+              <TableCell>{employee.name}</TableCell>
+              <TableCell>{employee.surname}</TableCell>
+              <TableCell>{employee.group}</TableCell>
+              <TableCell>
+                <Button variant="contained" color="error" onClick={() => delEmployee(employee.id)} >
+                  Удалить
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
   );
 };
 
-export default Table;
+export default EmployeeTable;

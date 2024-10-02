@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { TextField, Button, Box } from "@mui/material";
 
 const AddStudentForm = ({ addStudent }) => {
   const [name, setName] = useState("");
@@ -7,43 +8,21 @@ const AddStudentForm = ({ addStudent }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const newStudent = {
-      id: Date.now(),
-      name,
-      surname,
-      group,
-    };
-    addStudent(newStudent);
+    addStudent({ name, surname, group });
     setName("");
     setSurname("");
     setGroup("");
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <input
-        type="text"
-        placeholder="Имя"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        required
-      />
-      <input
-        type="text"
-        placeholder="Фамилия"
-        value={surname}
-        onChange={(e) => setSurname(e.target.value)}
-        required
-      />
-      <input
-        type="text"
-        placeholder="Группа"
-        value={group}
-        onChange={(e) => setGroup(e.target.value)}
-        required
-      />
-      <button type="submit">Добавить</button>
-    </form>
+    <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 2 }}>
+      <TextField label="Имя" value={name} onChange={(e) => setName(e.target.value)} margin="normal" required/>
+      <TextField label="Фамилия" value={surname} onChange={(e) => setSurname(e.target.value)} margin="normal" required/>
+      <TextField label="Группа" value={group} onChange={(e) => setGroup(e.target.value)} margin="normal" required/>
+      <Button type="submit" variant="contained" color="primary" sx={{ mt: 2 }}>
+        Добавить
+      </Button>
+    </Box>
   );
 };
 
