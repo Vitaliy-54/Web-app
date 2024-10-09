@@ -1,12 +1,10 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import EmployeeAPI from "./api/service";
-import Table from "./Table";
+import EmployeeTable from "./Table";
 import AddStudentForm from "./AddStudentForm";
 import { Container, Typography } from "@mui/material";
 
-function App() {
-
-
+function Dashboard() {
   const [employees, setEmployees] = useState([]);
 
   useEffect(() => {
@@ -55,9 +53,9 @@ function App() {
         Студенты
       </Typography>
       <AddStudentForm addStudent={addEmp} />
-      <Table employees={employees} delEmployee={delEmp} />
+      <EmployeeTable employees={employees} delEmployee={delEmp} />
     </Container>
   );
 }
 
-export default App;
+export default Dashboard;
