@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import LoginPage from "./Authorization/LoginPage";
+import LoginPage from "../Authorization/LoginPage";
 import Dashboard from "./Dashboard";
 import { Container } from "@mui/material";
 
