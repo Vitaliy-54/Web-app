@@ -1,11 +1,5 @@
-import { createStore, combineReducers } from 'redux';
-import employeeReducer from '../reducers/employeeReducer';
-import authReducer from '../reducers/authReducer';
-
-const rootReducer = combineReducers({
-  employees: employeeReducer,
-  auth: authReducer,
-});
+import { createStore } from 'redux';
+import rootReducer from '../reducers';
 
 const store = createStore(rootReducer);
 
