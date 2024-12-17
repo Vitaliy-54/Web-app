@@ -1,28 +1,31 @@
+import { createSlice } from '@reduxjs/toolkit';
+import { fetchCategories } from '../actions/categoriesActions';
+
 const initialState = {
   categories: [],
+  loading: false,
+  error: null,
 };
 
-const categoriesReducer = (state = initialState, action) => {
-  switch (action.type) {
-    case 'SET_CATEGORIES':
-      return { ...state, categories: action.payload };
-    case 'ADD_CATEGORY':
-      return { ...state, categories: [...state.categories, action.payload] };
-    case 'EDIT_CATEGORY':
-      return {
-        ...state,
-        categories: state.categories.map(category =>
-          category.id === action.payload.id ? action.payload : category
-        ),
-      };
-    case 'DELETE_CATEGORY':
-      return {
-        ...state,
-        categories: state.categories.filter(category => category.id !== action.payload),
-      };
-    default:
-      return state;
-  }
-};
+const categoriesSlice = createSlice({
+  name: 'categories',
+  initialState,
+  reducers: {},
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchCategories.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchCategories.fulfilled, (state, action) => {
+        state.loading = false;
+        state.categories = action.payload;
+      })
+      .addCase(fetchCategories.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message;
+      });
+  },
+});
 
-export default categoriesReducer;
+export default categoriesSlice.reducer;

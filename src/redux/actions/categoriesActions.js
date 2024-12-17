@@ -1,19 +1,7 @@
-export const setCategories = (categories) => ({
-  type: 'SET_CATEGORIES',
-  payload: categories
-});
+import { createAsyncThunk } from '@reduxjs/toolkit';
+import axiosConfig from '../../api/axiosConfig';
 
-export const addCategory = (category) => ({
-  type: 'ADD_CATEGORY',
-  payload: category
-});
-
-export const editCategory = (category) => ({
-  type: 'EDIT_CATEGORY',
-  payload: category
-});
-
-export const deleteCategory = (id) => ({
-  type: 'DELETE_CATEGORY',
-  payload: id
+export const fetchCategories = createAsyncThunk('categories/fetchCategories', async () => {
+  const response = await axiosConfig.get('/categories');
+  return response.data;
 });

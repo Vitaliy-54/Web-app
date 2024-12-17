@@ -1,28 +1,31 @@
+import { createSlice } from '@reduxjs/toolkit';
+import { fetchNews } from '../actions/newsActions';
+
 const initialState = {
-    news: [],
-  };
-  
-  const newsReducer = (state = initialState, action) => {
-    switch (action.type) {
-      case 'SET_NEWS':
-        return { ...state, news: action.payload };
-      case 'ADD_NEWS':
-        return { ...state, news: [...state.news, action.payload] };
-      case 'EDIT_NEWS':
-        return {
-          ...state,
-          news: state.news.map(newsItem =>
-            newsItem.id === action.payload.id ? action.payload : newsItem
-          ),
-        };
-      case 'DELETE_NEWS':
-        return {
-          ...state,
-          news: state.news.filter(newsItem => newsItem.id !== action.payload),
-        };
-      default:
-        return state;
-    }
-  };
-  
-  export default newsReducer;
+  news: [],
+  loading: false,
+  error: null,
+};
+
+const newsSlice = createSlice({
+  name: 'news',
+  initialState,
+  reducers: {},
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchNews.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchNews.fulfilled, (state, action) => {
+        state.loading = false;
+        state.news = action.payload;
+      })
+      .addCase(fetchNews.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message;
+      });
+  },
+});
+
+export default newsSlice.reducer;

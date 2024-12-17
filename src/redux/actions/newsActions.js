@@ -1,19 +1,7 @@
-export const setNews = (news) => ({
-  type: 'SET_NEWS',
-  payload: news
-});
+import { createAsyncThunk } from '@reduxjs/toolkit';
+import axiosConfig from '../../api/axiosConfig';
 
-export const addNews = (news) => ({
-  type: 'ADD_NEWS',
-  payload: news
-});
-
-export const editNews = (news) => ({
-  type: 'EDIT_NEWS',
-  payload: news
-});
-
-export const deleteNews = (id) => ({
-  type: 'DELETE_NEWS',
-  payload: id
+export const fetchNews = createAsyncThunk('news/fetchNews', async () => {
+  const response = await axiosConfig.get('/news');
+  return response.data;
 });
