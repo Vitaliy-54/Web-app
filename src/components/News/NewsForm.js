@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { TextField, Button, Typography, Paper } from '@mui/material';
 import { useFormik } from 'formik';
+import * as Yup from 'yup';
 import axiosConfig from '../../api/axiosConfig';
 import { useNavigate, useParams } from 'react-router-dom';
 
@@ -9,12 +10,19 @@ const NewsForm = () => {
   const navigate = useNavigate();
   const [error, setError] = useState('');
 
+  const validationSchema = Yup.object({
+    title: Yup.string().required('Заголовок обязателен'),
+    content: Yup.string().required('Содержимое обязательно'),
+    publishDate: Yup.date().required('Дата публикации обязательна').nullable(),
+  });
+
   const formik = useFormik({
     initialValues: {
       title: '',
       content: '',
       publishDate: '',
     },
+    validationSchema,
     onSubmit: async (values) => {
       try {
         if (id) {
@@ -62,6 +70,8 @@ const NewsForm = () => {
           name="title"
           value={formik.values.title}
           onChange={formik.handleChange}
+          error={Boolean(formik.errors.title)}
+          helperText={formik.errors.title}
           required
         />
         <TextField
@@ -74,6 +84,8 @@ const NewsForm = () => {
           name="content"
           value={formik.values.content}
           onChange={formik.handleChange}
+          error={Boolean(formik.errors.content)}
+          helperText={formik.errors.content}
           required
         />
         <TextField
@@ -85,6 +97,8 @@ const NewsForm = () => {
           name="publishDate"
           value={formik.values.publishDate}
           onChange={formik.handleChange}
+          error={Boolean(formik.errors.publishDate)}
+          helperText={formik.errors.publishDate}
           required
         />
         <Button variant="contained" type="submit" fullWidth>

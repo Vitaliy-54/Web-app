@@ -16,6 +16,8 @@ import {
   TableRow,
 } from '@mui/material';
 import NewsCategoriesForm from './NewsCategoriesForm';
+import { useFormik } from 'formik';
+import * as Yup from 'yup';
 
 const NewsCategoriesList = () => {
   const [categories, setCategories] = useState([]);
@@ -23,6 +25,38 @@ const NewsCategoriesList = () => {
   const [newsCategories, setNewsCategories] = useState([]);
   const [open, setOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
+
+  const validationSchema = Yup.object({
+    selectedNews: Yup.string().required('Выберите новость'),
+    selectedCategory: Yup.string().required('Выберите категорию'),
+  });
+
+  const formik = useFormik({
+    initialValues: {
+      selectedNews: '',
+      selectedCategory: '',
+    },
+    validationSchema,
+    onSubmit: async (values) => {
+      try {
+        const data = {
+          news: { id: values.selectedNews },
+          categories: { id: values.selectedCategory },
+        };
+
+        if (editingCategory) {
+          const response = await axiosConfig.put(`/newscategories/${editingCategory.id}`, data);
+          handleCategoryUpdated(response.data);
+        } else {
+          const response = await axiosConfig.post('/newscategories', data);
+          handleCategoryUpdated(response.data);
+        }
+        handleClose();
+      } catch (error) {
+        console.error("Ошибка при сохранении связи новостей и категорий:", error);
+      }
+    },
+  });
 
   const fetchCategories = async () => {
     try {
@@ -59,6 +93,7 @@ const NewsCategoriesList = () => {
 
   const handleAddOpen = () => {
     setEditingCategory(null);
+    formik.resetForm();
     setOpen(true);
   };
 
@@ -68,8 +103,8 @@ const NewsCategoriesList = () => {
   };
 
   const handleCategoryUpdated = (updatedCategory) => {
-    setCategories((prevCategories) =>
-      prevCategories.map((cat) => (cat.id === updatedCategory.id ? updatedCategory : cat))
+    setNewsCategories((prevNewsCategories) =>
+      prevNewsCategories.map((nc) => (nc.id === updatedCategory.id ? updatedCategory : nc))
     );
     fetchNewsCategories();
   };
@@ -85,6 +120,8 @@ const NewsCategoriesList = () => {
 
   const handleEditOpen = (newsCategory) => {
     setEditingCategory(newsCategory);
+    formik.setFieldValue('selectedNews', newsCategory.news.id);
+    formik.setFieldValue('selectedCategory', newsCategory.categories.id);
     setOpen(true);
   };
 
@@ -104,46 +141,18 @@ const NewsCategoriesList = () => {
           <TableHead>
             <TableRow>
               <TableCell>Категория</TableCell>
-              <TableCell>Заголовки новостей</TableCell>
+              <TableCell>Новость</TableCell>
+              <TableCell>Действия</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {categories.map(category => (
-              <TableRow key={category.id}>
+            {newsCategories.map((newsCategory) => (
+              <TableRow key={newsCategory.id}>
+                <TableCell>{newsCategory.categories.name}</TableCell>
+                <TableCell>{newsCategory.news.title}</TableCell>
                 <TableCell>
-                  <Typography variant="h6">{category.name}</Typography>
-                </TableCell>
-                <TableCell>
-                  <TableContainer>
-                    <Table>
-                      <TableBody>
-                        {newsCategories
-                          .filter(nc => nc.categories.id === category.id)
-                          .map(nc => (
-                            <TableRow key={nc.id}>
-                              <TableCell>{nc.news.title}</TableCell>
-                              <TableCell>
-                                <Button 
-                                  variant="contained" 
-                                  color="error" 
-                                  onClick={() => handleDeleteNewsCategory(nc.id)}
-                                >
-                                  Удалить
-                                </Button>
-                                <Button 
-                                  variant="contained" 
-                                  color="primary" 
-                                  onClick={() => handleEditOpen(nc)} // Open edit dialog with selected news-category
-                                  sx={{ marginLeft: 1 }}
- >
-                                  Изменить
-                                </Button>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
+                  <Button onClick={() => handleEditOpen(newsCategory)}>Редактировать</Button>
+                  <Button onClick={() => handleDeleteNewsCategory(newsCategory.id)}>Удалить</Button>
                 </TableCell>
               </TableRow>
             ))}
@@ -152,18 +161,13 @@ const NewsCategoriesList = () => {
       </TableContainer>
 
       <Dialog open={open} onClose={handleClose}>
-        <DialogTitle>{editingCategory ? 'Изменить связь' : 'Добавить связь'}</DialogTitle>
+        <DialogTitle>{editingCategory ? 'Редактировать связь' : 'Добавить связь'}</DialogTitle>
         <DialogContent>
-          <NewsCategoriesForm 
-            category={editingCategory} 
-            onClose={handleClose} 
-            onCategoryUpdated={handleCategoryUpdated} 
-            newsList={newsList} 
-            categoriesList={categories} 
-          />
+          <NewsCategoriesForm formik={formik} categories={categories} newsList={newsList} />
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleClose} color="primary">Отменить</Button>
+          <Button onClick={handleClose}>Отмена</Button>
+          <Button onClick={formik.handleSubmit}>Сохранить</Button>
         </DialogActions>
       </Dialog>
     </Paper>

@@ -1,88 +1,42 @@
-import React, { useEffect } from 'react';
-import { Button, Select, MenuItem, InputLabel, FormControl } from '@mui/material';
-import { useFormik } from 'formik';
-import axiosConfig from '../../api/axiosConfig';
+import React from 'react';
+import { MenuItem, FormControl, InputLabel, Select } from '@mui/material';
 
-const NewsCategoriesForm = ({ category, onClose, onCategoryUpdated, newsList, categoriesList }) => {
-  const formik = useFormik({
-    initialValues: {
-      selectedNews: '',
-      selectedCategory: '',
-    },
-    onSubmit: async (values) => {
-      console.log("Submitting:", values); // Отладочное сообщение
-      try {
-        const data = {
-          news: { id: values.selectedNews },
-          categories: { id: values.selectedCategory }
-        };
-
-        if (category) {
-          const response = await axiosConfig.put(`/newscategories/${category.id}`, data);
-          onCategoryUpdated(response.data);
-        } else {
-          const response = await axiosConfig.post('/newscategories', data);
-          onCategoryUpdated(response.data);
-        }
-        onClose();
-      } catch (error) {
-        console.error("Ошибка при сохранении категории:", error);
-        alert("Произошла ошибка при сохранении. Пожалуйста, попробуйте еще раз.");
-      }
-    },
-  });
-
-  useEffect(() => {
-    if (category) {
-      formik.setFieldValue('selectedNews', category.news.id);
-      formik.setFieldValue('selectedCategory', category.categories.id);
-    } else {
-      formik.setFieldValue('selectedNews', '');
-      formik.setFieldValue('selectedCategory', '');
-    }
-  }, [category, formik]);
-
+const NewsCategoriesForm = ({ formik, categories, newsList }) => {
   return (
-    <form onSubmit={formik.handleSubmit}>
-      <FormControl fullWidth variant="outlined" margin="dense">
-        <InputLabel id="news-select-label">Выбрать новость</InputLabel>
+    <form>
+      <FormControl fullWidth margin="normal">
+        <InputLabel>Выберите новость</InputLabel>
         <Select
-          labelId="news-select-label"
           name="selectedNews"
-          value={ formik.values.selectedNews}
+          value={formik.values.selectedNews}
           onChange={formik.handleChange}
-          required
+          error={Boolean(formik.errors.selectedNews)}
         >
-          {newsList.length > 0 ? (
-            newsList.map(news => (
-              <MenuItem key={news.id} value={news.id}>{news.title}</MenuItem>
-            ))
-          ) : (
-            <MenuItem disabled>Нет новостей</MenuItem>
-          )}
+          {newsList.map((news) => (
+            <MenuItem key={news.id} value={news.id}>
+              {news.title}
+            </MenuItem>
+          ))}
         </Select>
+        {formik.errors.selectedNews && <div style={{ color: 'red' }}>{formik.errors.selectedNews}</div>}
       </FormControl>
-      <FormControl fullWidth variant="outlined" margin="dense">
-        <InputLabel id="categories-select-label">Выбрать категорию</InputLabel>
+
+      <FormControl fullWidth margin="normal">
+        <InputLabel>Выберите категорию</InputLabel>
         <Select
-          labelId="categories-select-label"
           name="selectedCategory"
           value={formik.values.selectedCategory}
           onChange={formik.handleChange}
-          required
+          error={Boolean(formik.errors.selectedCategory)}
         >
-          {categoriesList.length > 0 ? (
-            categoriesList.map(category => (
-              <MenuItem key={category.id} value={category.id}>{category.name}</MenuItem>
-            ))
-          ) : (
-            <MenuItem disabled>Нет категорий</MenuItem>
-          )}
+          {categories.map((category) => (
+            <MenuItem key={category.id} value={category.id}>
+              {category.name}
+            </MenuItem>
+          ))}
         </Select>
+        {formik.errors.selectedCategory && <div style={{ color: 'red' }}>{formik.errors.selectedCategory}</div>}
       </FormControl>
-      <Button type="submit" variant="contained" color="primary" sx={{ marginTop: 2 }}>
-        {category ? 'Обновить' : 'Создать'}
-      </Button>
     </form>
   );
 };

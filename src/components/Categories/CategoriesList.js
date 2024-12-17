@@ -1,14 +1,41 @@
 import React, { useEffect, useState } from 'react';
 import axiosConfig from '../../api/axiosConfig';
 import { Paper, Typography, Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField } from '@mui/material';
+import { useFormik } from 'formik';
+import * as Yup from 'yup';
 import { useNavigate } from 'react-router-dom';
 
 const CategoriesList = () => {
   const [categories, setCategories] = useState([]);
   const [open, setOpen] = useState(false);
-  const [newCategoryName, setNewCategoryName] = useState('');
   const [editId, setEditId] = useState(null);
   const navigate = useNavigate();
+
+  const validationSchema = Yup.object({
+    name: Yup.string().required('Имя категории обязательно'),
+  });
+
+  const formik = useFormik({
+    initialValues: {
+      name: '',
+    },
+    validationSchema,
+    onSubmit: async (values) => {
+      try {
+        if (editId) {
+          await axiosConfig.put(`/categories/${editId}`, values);
+          setCategories(categories.map(item => (item.id === editId ? { ...item, ...values } : item)));
+        } else {
+          const response = await axiosConfig.post('/categories', values);
+          setCategories([...categories, response.data]);
+        }
+        handleClose();
+        navigate('/categories');
+      } catch (error) {
+        console.error("Ошибка при сохранении категории:", error);
+      }
+    },
+  });
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -31,37 +58,21 @@ const CategoriesList = () => {
   const handleEdit = (id) => {
     const categoryToEdit = categories.find(item => item.id === id);
     if (categoryToEdit) {
-      setNewCategoryName(categoryToEdit.name);
+      formik.setFieldValue('name', categoryToEdit.name);
       setEditId(id);
       setOpen(true);
     }
   };
 
   const handleAddOpen = () => {
-    setNewCategoryName('');
+    formik.resetForm();
     setEditId(null);
     setOpen(true);
   };
 
-  const handleAddClose = () => {
+  const handleClose = () => {
     setOpen(false);
-    setNewCategoryName('');
-  };
-
-  const handleAddSubmit = async () => {
-    try {
-      if (editId) {
-        await axiosConfig.put(`/categories/${editId}`, { name: newCategoryName });
-        setCategories(categories.map(item => (item.id === editId ? { ...item, name: newCategoryName } : item)));
-      } else {
-        const response = await axiosConfig.post('/categories', { name: newCategoryName });
-        setCategories([...categories, response.data]);
-      }
-      handleAddClose();
-      navigate('/categories');
-    } catch (error) {
-      console.error("Ошибка при добавлении/обновлении категории:", error);
-    }
+    setEditId(null);
   };
 
   return (
@@ -82,28 +93,33 @@ const CategoriesList = () => {
         </div>
       ))}
 
-      <Dialog open={open} onClose={handleAddClose}>
+      <Dialog open={open} onClose={handleClose}>
         <DialogTitle>{editId ? 'Изменить категорию' : 'Добавить категорию'}</DialogTitle>
         <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="Имя категории"
-            type="text"
-            fullWidth
-            variant="outlined"
-            value={newCategoryName}
-            onChange={(e) => setNewCategoryName(e.target.value)}
-            required
-          />
+          <form onSubmit={formik.handleSubmit}>
+            <TextField
+              autoFocus
+              margin="dense"
+              label="Имя категории"
+              type="text"
+              fullWidth
+              variant="outlined"
+              name="name"
+              value={formik.values.name}
+              onChange={formik.handleChange}
+              error={Boolean(formik.errors.name)}
+              helperText={formik.errors.name}
+              required
+            />
+            <DialogActions>
+              <Button onClick={handleClose} color="primary">Отмена</Button>
+              <Button type="submit" color="primary">{editId ? 'Сохранить' : 'Добавить'}</Button>
+            </DialogActions>
+          </form>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleAddClose} color="primary">Отменить</Button>
-          <Button onClick ={handleAddSubmit} color="primary">{editId ? 'Обновить' : 'Добавить'}</Button>
-        </DialogActions>
       </Dialog>
     </Paper>
   );
 };
 
-export default CategoriesList; 
+export default CategoriesList;

@@ -2,15 +2,44 @@ import React, { useEffect, useState } from 'react';
 import { Paper, Typography, Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField } from '@mui/material';
 import axiosConfig from '../../api/axiosConfig';
 import { useNavigate } from 'react-router-dom';
+import { useFormik } from 'formik';
+import * as Yup from 'yup';
 
 const NewsList = () => {
   const [news, setNews] = useState([]);
   const [open, setOpen] = useState(false);
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
-  const [publishDate, setPublishDate] = useState('');
   const [editId, setEditId] = useState(null);
   const navigate = useNavigate();
+
+  const validationSchema = Yup.object({
+    title: Yup.string().required('Заголовок обязателен'),
+    content: Yup.string().required('Содержимое обязательно'),
+    publishDate: Yup.date().required('Дата публикации обязательна').nullable(),
+  });
+
+  const formik = useFormik({
+    initialValues: {
+      title: '',
+      content: '',
+      publishDate: '',
+    },
+    validationSchema,
+    onSubmit: async (values) => {
+      try {
+        if (editId) {
+          await axiosConfig.put(`/news/${editId}`, values);
+          setNews(news.map(item => (item.id === editId ? { ...item, ...values } : item)));
+        } else {
+          const response = await axiosConfig.post('/news', values);
+          setNews([...news, response.data]);
+        }
+        handleClose();
+        navigate('/news');
+      } catch (error) {
+        console.error("Ошибка при сохранении новости:", error);
+      }
+    },
+  });
 
   useEffect(() => {
     const fetchNews = async () => {
@@ -33,43 +62,23 @@ const NewsList = () => {
   const handleEdit = (id) => {
     const newsToEdit = news.find(item => item.id === id);
     if (newsToEdit) {
-      setTitle(newsToEdit.title);
-      setContent(newsToEdit.content);
-      setPublishDate(newsToEdit.publishDate ? newsToEdit.publishDate.split('T')[0] : '');
+      formik.setFieldValue('title', newsToEdit.title);
+      formik.setFieldValue('content', newsToEdit.content);
+      formik.setFieldValue('publishDate', newsToEdit.publishDate ? newsToEdit.publishDate.split('T')[0] : '');
       setEditId(id);
       setOpen(true);
     }
   };
 
   const handleAddOpen = () => {
-    setTitle('');
-    setContent('');
-    setPublishDate('');
+    formik.resetForm();
     setEditId(null);
     setOpen(true);
   };
 
   const handleClose = () => {
     setOpen(false);
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const newsData = { title, content, publishDate };
-
-    try {
-      if (editId) {
-        await axiosConfig.put(`/news/${editId}`, newsData);
-        setNews(news.map(item => (item.id === editId ? { ...item, ...newsData } : item)));
-      } else {
-        const response = await axiosConfig.post('/news', newsData);
-        setNews([...news, response.data]);
-      }
-      handleClose();
-      navigate('/news');
-    } catch (error) {
-      console.error("Ошибка при сохранении новости:", error);
-    }
+    setEditId(null);
   };
 
   return (
@@ -95,44 +104,55 @@ const NewsList = () => {
       <Dialog open={open} onClose={handleClose}>
         <DialogTitle>{editId ? 'Изменить новость' : 'Добавить новость'}</DialogTitle>
         <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="Заголовок"
-            type="text"
-            fullWidth
-            variant="outlined"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            required
-          />
-          <TextField
-            margin="dense"
-            label="Содержание"
-            type="text"
-            fullWidth
-            variant="outlined"
-            multiline
-            rows={4}
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            required
-          />
-          <TextField
-            margin="dense"
-            label="Дата публикации"
-            type="date"
-            fullWidth
-            variant="outlined"
-            value={publishDate}
-            onChange={(e) => setPublishDate(e.target.value)}
-            required
-          />
+          <form onSubmit={formik.handleSubmit}>
+            <TextField
+              autoFocus
+              margin=" dense"
+              label="Заголовок"
+              type="text"
+              fullWidth
+              variant="outlined"
+              name="title"
+              value={formik.values.title}
+              onChange={formik.handleChange}
+              error={Boolean(formik.errors.title)}
+              helperText={formik.errors.title}
+              required
+            />
+            <TextField
+              margin="dense"
+              label="Содержимое"
+              type="text"
+              fullWidth
+              variant="outlined"
+              multiline
+              rows={4}
+              name="content"
+              value={formik.values.content}
+              onChange={formik.handleChange}
+              error={Boolean(formik.errors.content)}
+              helperText={formik.errors.content}
+              required
+            />
+            <TextField
+              margin="dense"
+              label="Дата публикации"
+              type="date"
+              fullWidth
+              variant="outlined"
+              name="publishDate"
+              value={formik.values.publishDate}
+              onChange={formik.handleChange}
+              error={Boolean(formik.errors.publishDate)}
+              helperText={formik.errors.publishDate}
+              required
+            />
+            <DialogActions>
+              <Button onClick={handleClose} color="primary">Отмена</Button>
+              <Button type="submit" color="primary">{editId ? 'Сохранить' : 'Добавить'}</Button>
+            </DialogActions>
+          </form>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose} color="primary">Отменить</Button>
-          <Button onClick={handleSubmit} color="primary">{editId ? 'Обновить' : 'Добавить'}</Button>
-        </DialogActions>
       </Dialog>
     </Paper>
   );

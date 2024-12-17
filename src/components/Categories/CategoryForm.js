@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { TextField, Button, Typography, Paper } from '@mui/material';
 import { useFormik } from 'formik';
+import * as Yup from 'yup';
 import axiosConfig from '../../api/axiosConfig';
 import { useNavigate, useParams } from 'react-router-dom';
 
@@ -8,10 +9,15 @@ const CategoryForm = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
+  const validationSchema = Yup.object({
+    name: Yup.string().required('Имя категории обязательно'),
+  });
+
   const formik = useFormik({
     initialValues: {
       name: '',
     },
+    validationSchema,
     onSubmit: async (values) => {
       try {
         if (id) {
@@ -54,6 +60,8 @@ const CategoryForm = () => {
           name="name"
           value={formik.values.name}
           onChange={formik.handleChange}
+          error={Boolean(formik.errors.name)}
+          helperText={formik.errors.name}
           required
         />
         <Button variant="contained" type="submit" fullWidth>
