@@ -1,50 +1,56 @@
-import React, { useEffect, useState } from 'react';
-import {Button, Select, MenuItem, InputLabel, FormControl } from '@mui/material';
+import React, { useEffect } from 'react';
+import { Button, Select, MenuItem, InputLabel, FormControl } from '@mui/material';
+import { useFormik } from 'formik';
 import axiosConfig from '../../api/axiosConfig';
 
 const NewsCategoriesForm = ({ category, onClose, onCategoryUpdated, newsList, categoriesList }) => {
-  const [selectedNews, setSelectedNews] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('');
+  const formik = useFormik({
+    initialValues: {
+      selectedNews: '',
+      selectedCategory: '',
+    },
+    onSubmit: async (values) => {
+      console.log("Submitting:", values); // Отладочное сообщение
+      try {
+        const data = {
+          news: { id: values.selectedNews },
+          categories: { id: values.selectedCategory }
+        };
+
+        if (category) {
+          const response = await axiosConfig.put(`/newscategories/${category.id}`, data);
+          onCategoryUpdated(response.data);
+        } else {
+          const response = await axiosConfig.post('/newscategories', data);
+          onCategoryUpdated(response.data);
+        }
+        onClose();
+      } catch (error) {
+        console.error("Ошибка при сохранении категории:", error);
+        alert("Произошла ошибка при сохранении. Пожалуйста, попробуйте еще раз.");
+      }
+    },
+  });
 
   useEffect(() => {
     if (category) {
-      setSelectedNews(category.news.id);
-      setSelectedCategory(category.categories.id);
+      formik.setFieldValue('selectedNews', category.news.id);
+      formik.setFieldValue('selectedCategory', category.categories.id);
     } else {
-      setSelectedNews('');
-      setSelectedCategory('');
+      formik.setFieldValue('selectedNews', '');
+      formik.setFieldValue('selectedCategory', '');
     }
-  }, [category]);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const data = {
-        news: { id: selectedNews },
-        categories: { id: selectedCategory }
-      };
-
-      if (category) {
-        const response = await axiosConfig.put(`/newscategories/${category.id}`, data);
-        onCategoryUpdated(response.data);
-      } else {
-        const response = await axiosConfig.post('/newscategories', data);
-        onCategoryUpdated(response.data);
-      }
-      onClose();
-    } catch (error) {
-      console.error("Ошибка при сохранении категории:", error);
-    }
-  };
+  }, [category, formik]);
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={formik.handleSubmit}>
       <FormControl fullWidth variant="outlined" margin="dense">
         <InputLabel id="news-select-label">Выбрать новость</InputLabel>
         <Select
           labelId="news-select-label"
-          value={selectedNews}
-          onChange={(e) => setSelectedNews(e.target.value)}
+          name="selectedNews"
+          value={ formik.values.selectedNews}
+          onChange={formik.handleChange}
           required
         >
           {newsList.length > 0 ? (
@@ -60,8 +66,9 @@ const NewsCategoriesForm = ({ category, onClose, onCategoryUpdated, newsList, ca
         <InputLabel id="categories-select-label">Выбрать категорию</InputLabel>
         <Select
           labelId="categories-select-label"
-          value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value)}
+          name="selectedCategory"
+          value={formik.values.selectedCategory}
+          onChange={formik.handleChange}
           required
         >
           {categoriesList.length > 0 ? (
